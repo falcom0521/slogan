@@ -7,6 +7,8 @@ import {
   Image,
   TouchableOpacity,
   TouchableHighlight,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 import {
@@ -18,10 +20,13 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import useRegister from "./hooks/useRegister";
 
 const NormalRegisterScreen = ({ navigation }) => {
-  const [dob, setDob] = useState(new Date());
+  const [dob, setDob] = useState(null); // Initialize dob as null
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedGender, setSelectedGender] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   let [fontsLoaded] = useFonts({
     Poppins_300Light,
@@ -29,24 +34,69 @@ const NormalRegisterScreen = ({ navigation }) => {
     Poppins_600SemiBold,
   });
 
+  // Validation schema including gender and dob
   const validationSchema = Yup.object().shape({
-    name: Yup.string().required('Name is required'),
-    email: Yup.string().email('Invalid email format').required('Email is required'),
-    password: Yup.string().required('Password is required'),
-    phonenumber: Yup.string().required('Phone number is required'),
+    name: Yup.string().required("Name is required"),
+    email: Yup.string()
+      .email("Invalid email format")
+      .required("Email is required"),
+    password: Yup.string().required("Password is required"),
+    phonenumber: Yup.string().required("Phone number is required"),
+    dob: Yup.date()
+      .nullable() // Allow null initially
+      .required("Date of Birth is required")
+      .max(
+        new Date(new Date().setFullYear(new Date().getFullYear() - 18)),
+        "You must be at least 18 years old"
+      ),
+    gender: Yup.string().required("Gender is required"),
   });
 
   const formik = useFormik({
     initialValues: {
-      email: '',
-      name: '',
-      password: '',
-      phonenumber: '',
+      email: "",
+      name: "",
+      password: "",
+      phonenumber: "",
+      dob: null,
+      gender: "",
     },
     validationSchema,
-    onSubmit: values => {
-      alert(JSON.stringify(values, null, 2));
-      // Handle registration logic here
+    onSubmit: async (values) => {
+      setIsLoading(true);
+      values.gender = selectedGender;
+      values.dob = dob;
+
+      try {
+        const data = {
+          email: values.email,
+          password: values.password,
+          user_type: "1",
+          first_name: values.name,
+          last_name: values.name,
+          creator_category_id: "1",
+          image: "",
+          gender: selectedGender === "M" ? 1 : 2,
+        };
+
+        const res = await useRegister(data);
+        console.log("Register response:", res); // Log the entire response object for debugging
+
+        if (res?.["status code"] === 200) {
+          console.log("Navigating to OTP screen with email:", values.email);
+
+          navigation.navigate("OtpScreen",{ email: values.email }); // Navigate to OTP screen
+        } else {
+          Alert.alert("Registration failed: ", res?.message);
+        }
+
+      } catch (error) {
+        console.log("error code...", error);
+        Alert.alert("Error", "The email is already registsered , please Sign up !!");
+
+      } finally {
+        setIsLoading(false);
+      }
     },
   });
 
@@ -54,11 +104,12 @@ const NormalRegisterScreen = ({ navigation }) => {
     setShowDatePicker(false);
     if (selectedDate) {
       setDob(selectedDate);
+      formik.setFieldValue("dob", selectedDate);
     }
   };
 
   if (!fontsLoaded) {
-    return null; // You can return a fallback UI here if needed
+    return null;
   }
 
   return (
@@ -76,8 +127,8 @@ const NormalRegisterScreen = ({ navigation }) => {
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          onChangeText={formik.handleChange('name')}
-          onBlur={formik.handleBlur('name')}
+          onChangeText={formik.handleChange("name")}
+          onBlur={formik.handleBlur("name")}
           value={formik.values.name}
           placeholder="Name"
         />
@@ -87,8 +138,8 @@ const NormalRegisterScreen = ({ navigation }) => {
 
         <TextInput
           style={styles.input}
-          onChangeText={formik.handleChange('email')}
-          onBlur={formik.handleBlur('email')}
+          onChangeText={formik.handleChange("email")}
+          onBlur={formik.handleBlur("email")}
           value={formik.values.email}
           placeholder="Email"
         />
@@ -98,8 +149,8 @@ const NormalRegisterScreen = ({ navigation }) => {
 
         <TextInput
           style={styles.input}
-          onChangeText={formik.handleChange('phonenumber')}
-          onBlur={formik.handleBlur('phonenumber')}
+          onChangeText={formik.handleChange("phonenumber")}
+          onBlur={formik.handleBlur("phonenumber")}
           value={formik.values.phonenumber}
           placeholder="Phone number"
           keyboardType="numeric"
@@ -113,38 +164,59 @@ const NormalRegisterScreen = ({ navigation }) => {
           onPress={() => setShowDatePicker(true)}
         >
           <Text style={styles.dateText}>
-            {dob.toDateString() === new Date().toDateString()
-              ? "Date of Birth"
-              : dob.toDateString()}
+            {dob ? dob.toDateString() : "Date of Birth"}
           </Text>
         </TouchableOpacity>
+        {formik.touched.dob && formik.errors.dob ? (
+          <Text style={styles.errorText}>{formik.errors.dob}</Text>
+        ) : null}
       </View>
       {showDatePicker && (
         <DateTimePicker
           testID="dateTimePicker"
-          value={dob}
+          value={dob || new Date()}
           mode="date"
           display="default"
           onChange={handleDateChange}
         />
       )}
-      <View style={styles.genderContainer}>
-        <View style={styles.gendername}>
-          <Text style={styles.gendertext}>Gender</Text>
+      <View>
+        <View style={styles.genderContainer}>
+          <View style={styles.gendername}>
+            <Text style={styles.gendertext}>Gender</Text>
+          </View>
+          <View style={styles.gendersel}>
+            <TouchableOpacity
+              style={[styles.genderButton, selectedGender === "M" && styles.selectedGenderButton]}
+              onPress={() => {
+                setSelectedGender("M");
+                formik.setFieldValue("gender", "M"); // Update formik's gender value
+              }}
+            >
+              <Text style={styles.gendertext}>M</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.genderButton,
+                selectedGender === "F" && styles.selectedGenderButton,
+              ]}
+              onPress={() => {
+                setSelectedGender("F");
+                formik.setFieldValue("gender", "F"); // Update formik's gender value
+              }}
+            >
+              <Text style={styles.gendertext}>F</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.gendersel}>
-          <TouchableOpacity style={styles.genderButton}>
-            <Text style={styles.gendertext}>M</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.genderButton}>
-            <Text style={styles.gendertext}>F</Text>
-          </TouchableOpacity>
-        </View>
+        {formik.touched.gender && formik.errors.gender ? (
+          <Text style={styles.errorText}>{formik.errors.gender}</Text>
+        ) : null}
       </View>
       <TextInput
         style={styles.input}
-        onChangeText={formik.handleChange('password')}
-        onBlur={formik.handleBlur('password')}
+        onChangeText={formik.handleChange("password")}
+        onBlur={formik.handleBlur("password")}
         value={formik.values.password}
         placeholder="Password"
         secureTextEntry
@@ -154,17 +226,21 @@ const NormalRegisterScreen = ({ navigation }) => {
       ) : null}
 
       <View style={styles.buttonContainer}>
-        <TouchableHighlight
-          style={styles.buttonStyle}
-          onPress={formik.handleSubmit}
-          underlayColor="#F0F0F0"
-        >
-          <Text style={styles.buttonText}>Register</Text>
-        </TouchableHighlight>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#B12341" />
+        ) : (
+          <TouchableHighlight
+            style={styles.buttonStyle}
+            onPress={formik.handleSubmit}
+            underlayColor="#F0F0F0"
+          >
+            <Text style={styles.buttonText}>Register</Text>
+          </TouchableHighlight>
+        )}
       </View>
       <TouchableOpacity
         style={styles.registercontainer}
-        onPress={() => navigation.navigate("NormalLogin")} // Navigate to login screen
+        onPress={() => navigation.navigate("NormalLogin")}
       >
         <Text style={styles.test}>Don’t have an account? </Text>
         <Text style={styles.register}>Sign up</Text>
@@ -172,7 +248,6 @@ const NormalRegisterScreen = ({ navigation }) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -232,6 +307,7 @@ const styles = StyleSheet.create({
     textAlign: "flex-start",
     flexDirection: "row",
     justifyContent: "space-between", // To align gender name and buttons properly
+    alignItems: "center",
   },
   gendername: {
     height: 50,
@@ -243,6 +319,7 @@ const styles = StyleSheet.create({
     width: "60%",
     justifyContent: "center", // Center text vertically
     alignItems: "left", // Center text horizontally
+    marginTop: moderateScale(10),
   },
   gendertext: {
     fontSize: 16,
@@ -293,8 +370,10 @@ const styles = StyleSheet.create({
     color: "#B12341",
   },
   errorText: {
-    color: 'red',
-
+    color: "red",
+  },
+  selectedGenderButton: {
+    backgroundColor: "#B12341", // Change this color to whatever you prefer for selected state
   },
 });
 

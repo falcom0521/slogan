@@ -1,10 +1,10 @@
 import apiInstance from "../Instance/api";
 
-const useRegister = async (data) => {
+const Usenewpas = async (data) => {
   try {
     console.log("data passed", data);
 
-    const response = await apiInstance.post(`/register`, data);
+    const response = await apiInstance.post(`/forgotpwd-password-update`, data);
 
     console.log("register response...", response?.data);
 
@@ -16,4 +16,4 @@ const useRegister = async (data) => {
   }
 };
 
-export default useRegister;
+export default Usenewpas;

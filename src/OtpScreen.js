@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 import { useFonts, Poppins_300Light, Poppins_500Medium, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
+import useOtp from "./hooks/useOtp";
 
-const ForgotPassword = ({ navigation }) => {
+const OtpScreen = ({ navigation ,route}) => {
   let [fontsLoaded] = useFonts({ Poppins_300Light, Poppins_500Medium, Poppins_600SemiBold });
 
   const [Otp1, onChangeOtp1] = useState('');
@@ -14,6 +15,10 @@ const ForgotPassword = ({ navigation }) => {
   const otp2Ref = useRef(null);
   const otp3Ref = useRef(null);
   const otp4Ref = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const email = route?.params?.email || ''; // Check for email and provide a fallback
+  
 
   if (!fontsLoaded) {
     return <View style={styles.loadingContainer}><Text>Loading...</Text></View>;
@@ -30,12 +35,36 @@ const ForgotPassword = ({ navigation }) => {
     console.log('resend clicked')
   ]
 
-  const handleSubmit = () => {
-    const otp = Otp1 + Otp2 + Otp3 + Otp4;
+  const otp = Otp1 + Otp2 + Otp3 + Otp4;
+
+  const handleSubmit = async () => { // Add 'async' keyword here
     console.log('Entered OTP:', otp);
+    setIsLoading(true);
     // Navigate to the next screen
-    navigation.navigate('CreateNewPassword');
+
+
+    try {
+      const data = {
+        email: email,
+        otp: otp,
+      };
+      const res = await useOtp(data);
+      console.log("Register response:", res); // Log the entire response object for debugging
+      if (res?.["status"] === 200) {
+        navigation.navigate("NormalLogin"); // Navigate to the next screen after successful OTP verification
+        
+      } else {
+        Alert.alert("Verification failed: ", res?.message);
+      }
+
+    } catch (error) {
+      console.log("Error during OTP verification:", error);
+      Alert.alert("Error", "OTP verification failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <View style={styles.container}>
@@ -114,8 +143,9 @@ const ForgotPassword = ({ navigation }) => {
         <TouchableOpacity 
           style={styles.buttonStyle} 
           onPress={handleSubmit}
+          disabled={isLoading} // Disable button during loading
         >
-          <Text style={styles.buttonText}>CREATE</Text>
+          <Text style={styles.buttonText}>VERIFY</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -232,4 +262,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ForgotPassword;
+export default OtpScreen;

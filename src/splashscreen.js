@@ -1,14 +1,35 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const SplashScreen = ({ navigation }) => {
+  const [status , setStatus] = useState(null)
+
   useEffect(() => {
-    // Simulate a delay for the splash screen
-    setTimeout(() => {
-      navigation.replace('Login');
-    }, 3000); // 3 seconds delay
+    const checkLoginStatus = async () => {
+      try {
+        console.log('token status....' , token);
+        const token =  AsyncStorage.getItem('authToken');
+        setStatus(token)
+        
+        if (status != null) {
+          // Token exists, navigate to HomeScreen
+          navigation.navigate('Drawer');
+        } else {
+          // No token, navigate to RoleScreen
+          navigation.navigate('Login');
+        }
+      } catch (error) {
+        console.error('Error checking authentication status:', error);
+        // Navigate to RoleScreen or handle error
+      }
+    };
+
+    checkLoginStatus();
   }, [navigation]);
 
+    
   return (
     <View style={styles.container}>
       <Image

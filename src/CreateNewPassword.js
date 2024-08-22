@@ -2,21 +2,40 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 import { useFonts, Poppins_300Light, Poppins_500Medium, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
+import Usenewpas from './hooks/Usenewpas';
 
-const CreateNewPassword = ({ navigation }) => { // Accept navigation prop
+const CreateNewPassword = ({ navigation, route }) => {
   let [fontsLoaded] = useFonts({ Poppins_300Light, Poppins_500Medium, Poppins_600SemiBold });
-
+  const [isLoading, setIsLoading] = useState(false);
   const [password1, setPassword1] = useState('');
   const [password2, setPassword2] = useState('');
+  const email = route?.params?.email || ''; // Fallback for email
 
-  const handlePassword = () => {
-    if (password1 === password2) {
-      console.log('Passwords Match:', password1);
-      // Navigate to the 'NormalLogin' screen
-      navigation.navigate('NormalLogin');
-    } else {
-      // Provide user feedback if passwords do not match
+  const handlePassword = async () => {
+    if (password1 !== password2) {
       Alert.alert('Password Mismatch', 'The passwords you entered do not match. Please try again.');
+      return;
+    }
+
+    setIsLoading(true);
+    const data = {
+      email: email,
+      password: password1,
+      c_password: password2,
+    };
+
+    try {
+      const res = await Usenewpas(data); // Assuming `Usenewpas` handles the API call
+      if (res?.status === 200) {
+        navigation.navigate("NormalLogin"); // Navigate to the 'NormalLogin' screen
+      } else {
+        Alert.alert("Verification failed", res?.message || "Invalid credentials.");
+      }
+    } catch (error) {
+      console.error("Error during password change:", error.response?.data || error.message);
+      Alert.alert("Error", "Password change failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -71,18 +90,18 @@ const CreateNewPassword = ({ navigation }) => { // Accept navigation prop
         <TouchableOpacity
           style={styles.buttonStyle}
           onPress={handlePassword}
+          disabled={isLoading} // Disable button while loading
         >
           <Text style={styles.buttonText}>CREATE</Text>
         </TouchableOpacity>
       </View>
-      
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center', // Center content horizontally
+    alignItems: 'center',
     padding: moderateScale(20),
   },
   groupImage: {
@@ -175,7 +194,6 @@ const styles = StyleSheet.create({
       { translateY: -25 },
     ],
   },
- 
 });
 
 export default CreateNewPassword;

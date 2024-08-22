@@ -11,6 +11,7 @@ import DrawerNavigation from './src/Drawer/DrawerNavigation';
 import EditProfile from './src/Drawer/EditProfile';
 import ForgotPassword from './src/ForgotPassword';
 import OtpScreen from './src/OtpScreen';
+import OtpForgotScreen from './src/OtpForgotScreen';
 import CreateNewPassword from './src/CreateNewPassword';
 import SloganScreen from './src/SloganScreen';
 const Stack = createStackNavigator();
@@ -29,6 +30,7 @@ export default function App() {
         <Stack.Screen name="EditProfile" component={EditProfile}/>
         <Stack.Screen name="ForgotPassword" component={ForgotPassword}/>
         <Stack.Screen name="OtpScreen" component={OtpScreen}/>
+        <Stack.Screen name="OtpForgotScreen" component={OtpForgotScreen}/>
         <Stack.Screen name="CreateNewPassword" component={CreateNewPassword}/>
         <Stack.Screen name="SloganScreen" component={SloganScreen} />
               

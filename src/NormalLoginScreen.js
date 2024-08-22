@@ -1,32 +1,48 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, TouchableHighlight, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableHighlight, TouchableOpacity, Alert } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 import { useFonts, Poppins_300Light, Poppins_500Medium, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
-// import apiInstance from '../../Instance/api';
+import useLogin from './hooks/useLogin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NormalLoginScreen = ({ navigation }) => { // Accept navigation prop
   let [fontsLoaded] = useFonts({ Poppins_300Light, Poppins_500Medium, Poppins_600SemiBold });
 
   const [text, onChangeText] = useState('');
   const [number, onChangeNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
 
   if (!fontsLoaded) {
     return null; // You can return a fallback UI here if needed
   }
+  const handleSubmit = async () => {
+    setIsLoading(true);
+  
+    try {
+      const data = {
+        email: text,
+        password: number,
+      };
+      const res = await useLogin(data);
+      console.log("Login response:", res);
+  
+      // Adjust the status code check according to your API response structure
+      if (res?.['status code'] === 200) {
+        await AsyncStorage.setItem('authToken', res.success.token);
 
-  // const fun = async () => {
-
-  //     try {
-
-  //       const res = await apiInstance
-        
-  //     } catch (error) {
-        
-  //     }
-
-
-  // }
-
+        navigation.navigate("Drawer");
+      } else {
+        Alert.alert("Login failed", res?.message || "You have entered invalid credentials.");
+      }
+    } catch (error) {
+      console.log("Error during login:", error);
+      Alert.alert("Error", "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <View style={styles.container}>
       <View style={styles.groupImage}>
@@ -63,7 +79,8 @@ const NormalLoginScreen = ({ navigation }) => { // Accept navigation prop
       <View style={styles.buttonContainer}>
         <TouchableHighlight 
           style={styles.buttonStyle} 
-          onPress={() => navigation.navigate('Drawer')}
+          onPress={handleSubmit}
+          disabled={isLoading}
           underlayColor="#F0F0F0" // Adjust color as needed
         >
           <Text style={styles.buttonText}>Login</Text>

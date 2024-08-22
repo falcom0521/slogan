@@ -4,7 +4,7 @@ const useRegister = async (data) => {
   try {
     console.log("data passed", data);
 
-    const response = await apiInstance.post(`/register`, data);
+    const response = await apiInstance.post(`/confirm-otp`, data);
 
     console.log("register response...", response?.data);
 
