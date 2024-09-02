@@ -30,7 +30,6 @@ const NormalLoginScreen = ({ navigation }) => { // Accept navigation prop
       // Adjust the status code check according to your API response structure
       if (res?.['status code'] === 200) {
         await AsyncStorage.setItem('authToken', res.success.token);
-
         navigation.navigate("Drawer");
       } else {
         Alert.alert("Login failed", res?.message || "You have entered invalid credentials.");

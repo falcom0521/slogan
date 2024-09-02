@@ -6,7 +6,6 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       <ScrollView>
       <SloganPost navigation={navigation} />
-      <SloganPost navigation={navigation} />
       </ScrollView>
     </View>
   );

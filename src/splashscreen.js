@@ -10,7 +10,8 @@ const SplashScreen = ({ navigation }) => {
     const checkLoginStatus = async () => {
       try {
         console.log('token status....' , token);
-        const token =  AsyncStorage.getItem('authToken');
+        const token = await AsyncStorage.getItem('userToken');
+        
         setStatus(token)
         
         if (status != null) {
