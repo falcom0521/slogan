@@ -4,21 +4,30 @@ import { moderateScale } from 'react-native-size-matters';
 import { useFonts, Poppins_300Light, Poppins_500Medium, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
 import useLogin from './hooks/useLogin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo'; // Import NetInfo
 
-const NormalLoginScreen = ({ navigation }) => { // Accept navigation prop
+const NormalLoginScreen = ({ navigation }) => {
   let [fontsLoaded] = useFonts({ Poppins_300Light, Poppins_500Medium, Poppins_600SemiBold });
 
   const [text, onChangeText] = useState('');
   const [number, onChangeNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-
   if (!fontsLoaded) {
     return null; // You can return a fallback UI here if needed
   }
+
   const handleSubmit = async () => {
     setIsLoading(true);
-  
+
+    // Check network connectivity
+    const networkState = await NetInfo.fetch();
+    if (!networkState.isConnected) {
+      Alert.alert("Network Error", "No internet connection. Please check your network settings.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const data = {
         email: text,
@@ -26,7 +35,7 @@ const NormalLoginScreen = ({ navigation }) => { // Accept navigation prop
       };
       const res = await useLogin(data);
       console.log("Login response:", res);
-  
+
       // Adjust the status code check according to your API response structure
       if (res?.['status code'] === 200) {
         await AsyncStorage.setItem('authToken', res.success.token);
@@ -41,7 +50,7 @@ const NormalLoginScreen = ({ navigation }) => { // Accept navigation prop
       setIsLoading(false);
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <View style={styles.groupImage}>
