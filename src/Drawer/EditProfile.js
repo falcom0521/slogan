@@ -4,15 +4,28 @@ import user from '../User';  // Import the user object from user.js
 import { moderateScale } from 'react-native-size-matters';
 import { launchImageLibrary } from 'react-native-image-picker';
 import CustomAppBar from '../CustomAppBar';
+import useEdit from "../hooks/useEdit"; // Corrected the import path
 
-const EditProfile = ({ navigation }) => {
-  // Load initial user data from user.js
-  const [profileImage, setProfileImage] = useState(user.profileImage);
-  const [username, setUsername] = useState(user.username);
-  const [email, setEmail] = useState(user.email);
-  const [phone, setPhone] = useState(user.phone);
-  const [gender, setGender] = useState(user.gender);
-  const [dob, setDob] = useState(user.dob);
+
+const EditProfile = () => {
+  const { profile, isLoading, error } = useEdit();
+  const [profileImage, setProfileImage] = useState(null);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [gender, setGender] = useState('');
+  const [dob, setDob] = useState('');
+
+  useEffect(() => {
+    if (profile) {
+      setProfileImage(profile.image ? { uri: profile.image } : require('../../assets/Ellipse 7.png'));
+      setUsername(`${profile.first_name} ${profile.last_name}`);
+      setEmail(profile.user.email);
+      setPhone(profile.phone || ''); // Assuming phone is optional
+      setGender(profile.gender === 1 ? 'Male' : 'Female');
+      setDob(profile.dob || '');
+    }
+  }, [profile]);
 
   // Function to choose an image from the gallery
   const chooseImageFromGallery = async () => {
@@ -38,25 +51,51 @@ const EditProfile = ({ navigation }) => {
   };
 
   // Function to handle the save action (for future API call)
-  const handleSaveProfile = () => {
-    const updatedProfile = {
-      username,
-      email,
-      phone,
-      gender,
-      dob,
-      profileImage,
-    };
+  const handleSaveProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const updatedProfile = {
+        first_name: username.split(' ')[0],
+        last_name: username.split(' ')[1] || '',
+        email,
+        phone,
+        gender: gender === 'Male' ? 1 : 2,
+        dob,
+        image: profileImage.uri, // Assume you're handling image upload elsewhere
+      };
 
-    // Here you would send the updated profile to an API
-    console.log("Profile saved:", updatedProfile);
+      const response = await apiInstance.post('/update_userProfile', updatedProfile, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    Alert.alert('Success', 'Profile updated successfully!');
+      console.log('Profile saved:', response.data);
+      Alert.alert('Success', 'Profile updated successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Failed to load profile: {error.message}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      
       <View style={styles.imageContainer}>
         <Image
           source={profileImage}
@@ -117,9 +156,9 @@ const EditProfile = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    
     </View>
   );
+
 };
 
 const styles = StyleSheet.create({

@@ -15,7 +15,6 @@ import usePost from "./hooks/UsePost"; // Corrected the import path
 
 const SloganPost = ({ navigation }) => {
   const { posts, isLoading, error } = usePost();
-  const win_slogan = '';
 
   if (isLoading) {
     return <ActivityIndicator size="large" color="#0000ff" />;

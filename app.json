@@ -18,15 +18,22 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.falcom0521.Test",
+      "permissions": [
+        "INTERNET"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font"
-    
-      
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "143f0538-3560-4f37-bdbd-f7278b6e62f8"
+      }
+    }
   }
 }
