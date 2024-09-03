@@ -72,7 +72,7 @@ const SloganScreen = ({ navigation, route }) => {
                 <View style={styles.head}>
                   <Image
                     style={styles.logo}
-                    source={post.creator.image ? { uri: `${baseURLCreator}${post.creator.image}` } : require('../assets/Group (1).png')}// Use imageUrl prop
+                    source={post.creator.image ? { uri: `${baseURLCreator}${post.creator.image}` } : require('../assets/Group 2.png')}// Use imageUrl prop
                   />
                   <Text style={styles.usernameText}>{`${post.creator.first_name} ${post.creator.last_name}`}</Text>
                 </View>

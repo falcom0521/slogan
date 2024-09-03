@@ -48,7 +48,7 @@ const SloganPost = ({ navigation }) => {
               source={
                 post.company.image !== null && post.company.image !== ""
                 ? { uri: `${baseURLCompany}${post.company.image}` }
-                : require("../assets/Group (1).png")
+                : require("../assets/Group 2.png")
                 
               }
               // {...console.log("Company Image:", post.company.image)}
